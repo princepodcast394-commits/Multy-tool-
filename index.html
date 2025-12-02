@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Hero - All Tools In One Place</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A1A2F;
+            --secondary: #102A44;
+            --accent: #1B3958;
+            --text: #FFFFFF;
+            --shadow: rgba(0, 0, 0, 0.2);
+            --light-blue: rgba(27, 57, 88, 0.4);
+            --border-radius: 18px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--secondary);
+            padding: 1.2rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #4A9EFF;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        nav a:hover {
+            color: #4A9EFF;
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(27, 57, 88, 0.4) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(27, 57, 88, 0.3) 0%, transparent 50%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .hero-subtitle span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            border-radius: var(--border-radius);
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: var(--text);
+            font-size: 1.1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(74, 158, 255, 0.5);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4A9EFF;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* NEW TOOL SECTION STYLE - TAB STYLE */
+        .tool-categories-container {
+            margin-bottom: 5rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            padding: 0 1rem;
+        }
+
+        .category-tab {
+            padding: 1rem 2rem;
+            background-color: var(--secondary);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .category-tab:hover {
+            background-color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .category-tab.active {
+            background-color: var(--accent);
+            border-color: #4A9EFF;
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.2);
+        }
+
+        .tab-icon {
+            font-size: 1.3rem;
+        }
+
+        .category-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .tool-card {
+            background-color: var(--secondary);
+            border-radius: var(--border-radius);
+            padding: 1.8rem;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 5px 15px var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(74, 158, 255, 0.3);
+            box-shadow: 0 10px 25px var(--shadow);
+        }
+
+        .tool-icon-container {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .tool-info {
+            flex-grow: 1;
+        }
+
+        .tool-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .tool-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .tool-action {
+            color: #4A9EFF;
+            font-size: 1.5rem;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: var(--transition);
+        }
+
+        .tool-card:hover .tool-action {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Why Choose Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background-color: var(--secondary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(74, 158, 255, 0.2);
+            box-shadow: 0 10px 25px var(--shadow);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--secondary);
+            padding: 4rem 2rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: #4A9EFF;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 1.5rem;
+            }
+            
+            nav ul {
+                display: none;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            
+            .hero {
+                padding: 3rem 1.5rem;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .container {
+                padding: 3rem 1.5rem;
+            }
+            
+            .category-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .category-tab {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .mobile-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: var(--secondary);
+                padding: 1.5rem;
+                box-shadow: 0 10px 20px var(--shadow);
+                z-index: 999;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .mobile-menu li {
+                padding: 0.8rem 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-bar {
+                padding: 1rem 1.2rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feature-card {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        /* Tool search functionality */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="#" class="logo">Task<span>Hero</span></a>
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="#">Home</a></li>
+                <li><a href="#tools">Tools</a></li>
+                <li><a href="#categories">Categories</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="hamburger" id="hamburger">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Task Hero – All Tools In One Place</h1>
+            <div class="hero-subtitle">
+                <span><i class="fas fa-bolt"></i> Fast</span>
+                <span><i class="fas fa-dollar-sign"></i> Free</span>
+                <span><i class="fas fa-shield-alt"></i> Secure</span>
+                <span><i class="fas fa-user-check"></i> 100% No Login Required</span>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" id="searchInput" placeholder="Search for any tool (e.g., PDF converter, image compressor)...">
+                <div class="search-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Tool Categories - NEW TAB STYLE -->
+    <div class="container" id="tools">
+        <h2 class="section-title">All-In-One Tool Collection</h2>
+        
+        <div class="tool-categories-container">
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="pdf">
+                    <i class="fas fa-file-pdf tab-icon"></i>
+                    PDF Tools
+                </div>
+                <div class="category-tab" data-category="image">
+                    <i class="fas fa-image tab-icon"></i>
+                    Image Tools
+                </div>
+                <div class="category-tab" data-category="video">
+                    <i class="fas fa-video tab-icon"></i>
+                    Video & Audio
+                </div>
+                <div class="category-tab" data-category="text">
+                    <i class="fas fa-font tab-icon"></i>
+                    Text Tools
+                </div>
+                <div class="category-tab" data-category="utility">
+                    <i class="fas fa-calculator tab-icon"></i>
+                    Utility Calculators
+                </div>
+            </div>
+
+            <!-- PDF Tools Content -->
+            <div class="category-content active" id="pdf-tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-file-word"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PDF to Word</div>
+                            <div class="tool-desc">Convert PDF files to editable Word documents</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Word to PDF</div>
+                            <div class="tool-desc">Convert Word documents to PDF format</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-compress"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PDF Compressor</div>
+                            <div class="tool-desc">Reduce PDF file size without quality loss</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-object-group"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PDF Merger</div>
+                            <div class="tool-desc">Combine multiple PDFs into one document</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PDF Splitter</div>
+                            <div class="tool-desc">Split PDF into multiple files or extract pages</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Delete PDF Pages</div>
+                            <div class="tool-desc">Remove specific pages from PDF documents</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-redo"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Rotate PDF</div>
+                            <div class="tool-desc">Rotate PDF pages to correct orientation</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-file-image"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">JPG to PDF</div>
+                            <div class="tool-desc">Convert images to PDF documents</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PDF to JPG</div>
+                            <div class="tool-desc">Extract images from PDF files</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-sort-numeric-down"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Reorder PDF Pages</div>
+                            <div class="tool-desc">Rearrange pages in PDF documents</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Tools Content -->
+            <div class="category-content" id="image-tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-compress"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Image Compressor</div>
+                            <div class="tool-desc">Reduce image file size</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-expand"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Image Resizer</div>
+                            <div class="tool-desc">Resize images to desired dimensions</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-crop"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Image Cropper</div>
+                            <div class="tool-desc">Crop images to remove unwanted areas</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">JPG to PNG</div>
+                            <div class="tool-desc">Convert JPG images to PNG format</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">PNG to JPG</div>
+                            <div class="tool-desc">Convert PNG images to JPG format</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fab fa-chrome"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Image to WebP</div>
+                            <div class="tool-desc">Convert images to WebP format</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fab fa-chrome"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">WebP to JPG</div>
+                            <div class="tool-desc">Convert WebP images to JPG format</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-eye-slash"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Blur Image</div>
+                            <div class="tool-desc">Apply blur effect to images</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Rotate Image</div>
+                            <div class="tool-desc">Rotate images clockwise or counterclockwise</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-arrows-alt-h"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Flip Image</div>
+                            <div class="tool-desc">Flip images horizontally or vertically</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video & Audio Tools Content -->
+            <div class="category-content" id="video-tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-compress"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Video Compressor</div>
+                            <div class="tool-desc">Reduce video file size</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-file-audio"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Video to MP3</div>
+                            <div class="tool-desc">Extract audio from video files</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Video Trimmer</div>
+                            <div class="tool-desc">Trim video clips to desired length</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-cut"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Audio Cutter</div>
+                            <div class="tool-desc">Cut and trim audio files</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-object-group"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Audio Joiner</div>
+                            <div class="tool-desc">Merge multiple audio files</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Video Speed Changer</div>
+                            <div class="tool-desc">Change playback speed of videos</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-volume-mute"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Mute Video</div>
+                            <div class="tool-desc">Remove audio from video files</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">GIF Maker</div>
+                            <div class="tool-desc">Create GIFs from videos or images</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-compress"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">GIF Compressor</div>
+                            <div class="tool-desc">Reduce GIF file size</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">MP4 ↔ WebM Converter</div>
+                            <div class="tool-desc">Convert between MP4 and WebM formats</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Tools Content -->
+            <div class="category-content" id="text-tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-sort-numeric-up"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Word Counter</div>
+                            <div class="tool-desc">Count words in text</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-text-height"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Character Counter</div>
+                            <div class="tool-desc">Count characters in text</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-stream"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Remove Duplicate Lines</div>
+                            <div class="tool-desc">Remove duplicate lines from text</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Case Converter</div>
+                            <div class="tool-desc">Convert text case (upper, lower, title)</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-columns"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Text Separator</div>
+                            <div class="tool-desc">Separate text by lines, commas, etc.</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">URL Encoder/Decoder</div>
+                            <div class="tool-desc">Encode or decode URLs</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">JSON Formatter</div>
+                            <div class="tool-desc">Format and validate JSON</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fab fa-html5"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">HTML Formatter</div>
+                            <div class="tool-desc">Format HTML code</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-paragraph"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Lorem Ipsum Generator</div>
+                            <div class="tool-desc">Generate placeholder text</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Password Generator</div>
+                            <div class="tool-desc">Generate secure passwords</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utility Calculators Content -->
+            <div class="category-content" id="utility-tools">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">QR Code Generator</div>
+                            <div class="tool-desc">Generate QR codes from text or URLs</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-random"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Random Number Generator</div>
+                            <div class="tool-desc">Generate random numbers within range</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Strong Password Generator</div>
+                            <div class="tool-desc">Generate secure random passwords</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-birthday-cake"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Age Calculator</div>
+                            <div class="tool-desc">Calculate age from birth date</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">BMI Calculator</div>
+                            <div class="tool-desc">Calculate Body Mass Index</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">BMR Calculator</div>
+                            <div class="tool-desc">Calculate Basal Metabolic Rate</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Percentage Calculator</div>
+                            <div class="tool-desc">Calculate percentages</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">EMI Calculator</div>
+                            <div class="tool-desc">Calculate Equated Monthly Installment</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Unit Converter</div>
+                            <div class="tool-desc">Convert between different units</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon-container">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">Time Converter</div>
+                            <div class="tool-desc">Convert between time zones and formats</div>
+                        </div>
+                        <div class="tool-action">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Choose Task Hero -->
+    <div class="container">
+        <h2 class="section-title">Why Choose Task Hero</h2>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h3 class="feature-title">Free Forever</h3>
+                <p>All tools are completely free with no hidden costs or premium upgrades.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <h3 class="feature-title">No Login Needed</h3>
+                <p>Start using tools immediately without any signup or account creation.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-wifi-slash"></i>
+                </div>
+                <h3 class="feature-title">Works Offline</h3>
+                <p>Many tools work directly in your browser without internet connection.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">Safe & Secure</h3>
+                <p>Your files and data are processed locally and never uploaded to servers.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Task Hero</h3>
+                <p>Task Hero is your all-in-one solution for free, fast, and secure online tools. From PDF editing to image processing and utility calculators, we provide everything you need without requiring any login or account creation.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#tools">Tools</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Policies</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Disclaimer</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Task Hero — All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile Menu Toggle
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('nav-menu');
+        const searchInput = document.getElementById('searchInput');
+        
+        // Toggle mobile menu
+        hamburger.addEventListener('click', () => {
+            // Create mobile menu if it doesn't exist
+            if (!document.querySelector('.mobile-menu')) {
+                const mobileMenu = document.createElement('ul');
+                mobileMenu.className = 'mobile-menu';
+                mobileMenu.innerHTML = `
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#tools">Tools</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                `;
+                
+                // Add click event to close menu when a link is clicked
+                mobileMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.remove();
+                        hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                    });
+                });
+                
+                document.body.appendChild(mobileMenu);
+                hamburger.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                // Remove mobile menu if it exists
+                document.querySelector('.mobile-menu').remove();
+                hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+
+        // Tab Switching Functionality
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        const categoryContents = document.querySelectorAll('.category-content');
+
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Hide all category contents
+                categoryContents.forEach(content => content.classList.remove('active'));
+                
+                // Show corresponding category content
+                const categoryId = tab.getAttribute('data-category');
+                document.getElementById(`${categoryId}-tools`).classList.add('active');
+            });
+        });
+
+        // Tool Card Click Functionality
+        const toolCards = document.querySelectorAll('.tool-card');
+        toolCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const toolName = card.querySelector('.tool-name').textContent;
+                
+                // For PDF to Word tool
+                if (toolName === 'PDF to Word') {
+                    window.location.href = 'pdf-to-word.html';
+                }
+                // For other tools - show coming soon message
+                else {
+                    alert(`${toolName} tool is coming soon!`);
+                }
+            });
+        });
+
+        // Search Functionality
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                // Show all tool cards
+                toolCards.forEach(card => {
+                    card.classList.remove('hidden');
+                });
+                return;
+            }
+            
+            // Filter tool cards
+            toolCards.forEach(card => {
+                const cardText = card.textContent.toLowerCase();
+                
+                if (cardText.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Task Hero website loaded with new tab-style tool section');
+        });
+    </script>
+</body>
+</html>
