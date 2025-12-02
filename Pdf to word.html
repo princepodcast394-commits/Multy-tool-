@@ -1,0 +1,266 @@
+/*
+TaskHero — PDF to Word Tool
+Single-file React component (default export) built with Tailwind CSS.
+
+How to use:
+1. Create a React app (e.g. using Vite or Create React App).
+2. Install deps:
+   npm install pdfjs-dist docx file-saver
+
+   - pdfjs-dist: to read PDF and extract text
+   - docx: to generate .docx files
+   - file-saver: to save the generated file
+
+3. Ensure Tailwind CSS is configured in your project.
+4. Drop this component in your project (e.g., src/components/PdfToWord.jsx) and import it in a page.
+
+Notes / limitations:
+- This tool extracts **text content** from PDFs (works well for text-based PDFs). PDFs that are scanned images will need OCR — not included here.
+- The converter attempts to preserve page breaks by inserting a page break between pages.
+- Styling of the resulting .docx is basic (plain paragraphs). You can extend docx usage for richer formatting.
+
+*/
+
+import React, { useState, useRef } from 'react'
+import { saveAs } from 'file-saver'
+import * as pdfjsLib from 'pdfjs-dist'
+import { Document, Packer, Paragraph, TextRun, PageBreak } from 'docx'
+
+// For PDF.js worker to work in many bundlers, set the workerSrc:
+// Note: Depending on your bundler, you might need to import worker separately. This approach works with pdfjs-dist >=2.6
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+
+export default function PdfToWordTool() {
+  const [fileName, setFileName] = useState('')
+  const [processing, setProcessing] = useState(false)
+  const [progress, setProgress] = useState({ page: 0, total: 0 })
+  const [message, setMessage] = useState('')
+  const fileRef = useRef(null)
+
+  async function handleFilePick(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFileName(file.name)
+    setMessage('')
+    await convertPdfToDocx(file)
+  }
+
+  async function convertPdfToDocx(file) {
+    setProcessing(true)
+    setProgress({ page: 0, total: 0 })
+
+    try {
+      // read file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer()
+
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
+      const pdf = await loadingTask.promise
+
+      const total = pdf.numPages
+      setProgress({ page: 0, total })
+
+      const doc = new Document({ sections: [] })
+      const paragraphs = []
+
+      for (let p = 1; p <= total; p++) {
+        setProgress({ page: p, total })
+        const page = await pdf.getPage(p)
+        const textContent = await page.getTextContent()
+
+        // Combine text items in order
+        const pageText = textContent.items
+          .map((item) => (item.str ? item.str : ''))
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+
+        if (pageText.length > 0) {
+          // break into lines by simple heuristic (you can improve this)
+          const lines = pageText.split(/(?<=\.|\?|!)\s+/)
+          lines.forEach((line) => {
+            if (line.trim().length === 0) return
+            paragraphs.push(new Paragraph({ children: [new TextRun({ text: line.trim(), font: 'Arial', size: 22 })] }))
+          })
+        } else {
+          // If no extractable text, insert a placeholder line
+          paragraphs.push(new Paragraph({ children: [new TextRun({ text: '[Non-text content or image - not extracted]', italics: true })] }))
+        }
+
+        // Insert a page break after every page except last
+        if (p < total) paragraphs.push(new Paragraph({ children: [new PageBreak()] }))
+      }
+
+      // Add a single section containing all paragraphs
+      doc.addSection({ properties: {}, children: paragraphs })
+
+      setMessage('Generating Word document...')
+      const blob = await Packer.toBlob(doc)
+
+      const outName = file.name.replace(/\.pdf$/i, '') || 'converted'
+      saveAs(blob, `${outName}.docx`)
+      setMessage('Converted successfully! Your download should start.')
+    } catch (err) {
+      console.error(err)
+      setMessage('Conversion failed. See console for details. Scanned PDFs require OCR.')
+    } finally {
+      setProcessing(false)
+      setProgress({ page: 0, total: 0 })
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      setFileName(file.name)
+      convertPdfToDocx(file)
+    }
+  }
+
+  function preventDefault(e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  return (
+    <div className="min-h-screen bg-[#071225] text-white font-sans">
+      {/* Header (matches the image theme) */}
+      <header className="bg-gradient-to-b from-[#082033] to-[#052034] shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-[#7bd3ff]">Task<span className="text-white">Hero</span></div>
+          </div>
+          <nav className="hidden md:flex gap-6 text-sm opacity-90">
+            <a className="hover:underline cursor-pointer">Home</a>
+            <a className="hover:underline cursor-pointer">Tools</a>
+            <a className="hover:underline cursor-pointer">Categories</a>
+            <a className="hover:underline cursor-pointer">Contact</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <div className="bg-[linear-gradient(180deg,#052233_0%,#061728_100%)] rounded-2xl p-8 shadow-inner flex flex-col md:flex-row items-center gap-6">
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-extrabold">Task Hero – All Tools In One Place</h1>
+            <div className="mt-3 flex items-center gap-4 text-sm opacity-90">
+              <span>⚡ Fast</span>
+              <span>💲 Free</span>
+              <span>🔒 Secure</span>
+              <span>👤 100% No Login Required</span>
+            </div>
+
+            <div className="mt-6">
+              <div className="relative max-w-xl">
+                <input placeholder="Search for any tool (e.g., PDF converter, image compressor)..." className="w-full py-3 px-4 rounded-full bg-[#0b2a3a] placeholder:text-[#7aa7bf] outline-none" />
+                <button className="absolute right-2 top-2 bg-[#143b52] px-4 py-1 rounded-full">Search</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/3">
+            <div className="bg-[#062233] p-4 rounded-xl">
+              <div className="text-sm opacity-90">Selected Tool</div>
+              <div className="mt-2 font-semibold text-lg">PDF to Word</div>
+              <div className="mt-4 text-xs opacity-80">Convert PDF files to editable Word documents quickly — no signup required.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tool area */}
+      <main className="max-w-6xl mx-auto px-4 pb-20">
+        <h2 className="text-2xl font-bold mb-6">All-In-One Tool Collection</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left column: Tool card + dropzone */}
+          <div className="md:col-span-2">
+            <div className="rounded-xl bg-[#062234] p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-none w-14 h-14 rounded-lg bg-[#0c374a] flex items-center justify-center text-xl">📄</div>
+                <div>
+                  <h3 className="text-xl font-semibold">PDF to Word</h3>
+                  <p className="text-sm opacity-80 mt-1">Convert PDF files to editable Word documents. Drag & drop a PDF or click to select. Works best for text-based PDFs.</p>
+                </div>
+              </div>
+
+              {/* Dropzone */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={preventDefault}
+                onDragEnter={preventDefault}
+                onDragLeave={preventDefault}
+                className="mt-6 border-2 border-dashed border-[#0e3b51] rounded-xl p-6 text-center bg-[#041426] hover:border-[#1f6f95] transition-colors cursor-pointer"
+                onClick={() => fileRef.current && fileRef.current.click()}
+              >
+                <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={handleFilePick} />
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <div className="text-2xl">📥</div>
+                  <div className="text-sm opacity-80">Drop your PDF here or click to upload</div>
+                  <div className="text-xs opacity-60">No account, no watermark — just a simple conversion.</div>
+                </div>
+              </div>
+
+              {/* Status & Progress */}
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm">{fileName || 'No file selected'}</div>
+                  <div className="text-xs opacity-70 mt-1">{processing ? `Processing page ${progress.page} of ${progress.total}` : message}</div>
+                </div>
+                <div>
+                  <button
+                    onClick={() => fileRef.current && fileRef.current.click()}
+                    className="px-4 py-2 rounded-lg bg-[#144e6c] hover:bg-[#1b6b89]"
+                  >
+                    Upload PDF
+                  </button>
+                </div>
+              </div>
+
+              {processing && (
+                <div className="mt-4 bg-[#031823] rounded-full h-3 w-full overflow-hidden">
+                  <div className="h-3 bg-[#1e90ff] transition-[width]" style={{ width: `${(progress.page / Math.max(progress.total, 1)) * 100}%` }} />
+                </div>
+              )}
+
+              <div className="mt-6 text-xs opacity-70">
+                Tip: For scanned PDFs, use an OCR tool first and then convert the OCRed PDF for best results.
+              </div>
+            </div>
+          </div>
+
+          {/* Right column: quick features / other small cards (visual parity with image) */}
+          <aside className="space-y-4">
+            <div className="rounded-xl bg-[#062234] p-4">
+              <div className="text-sm opacity-80">Quick Tools</div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Merger</div>
+                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Compressor</div>
+                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Splitter</div>
+                <div className="p-2 bg-[#042033] rounded-md text-xs">Rotate PDF</div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-[#062234] p-4">
+              <div className="text-sm opacity-80">Why choose TaskHero?</div>
+              <ul className="mt-3 text-xs opacity-80 list-disc list-inside">
+                <li>No signup</li>
+                <li>Fast & secure</li>
+                <li>Mobile friendly</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      <footer className="bg-[#021722] py-6 mt-6">
+        <div className="max-w-6xl mx-auto px-4 text-sm text-white opacity-80 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>© {new Date().getFullYear()} TaskHero — All tools in one place. No account required.</div>
+          <div className="opacity-90">Made with ❤️</div>
+        </div>
+      </footer>
+    </div>
+  )
+}
