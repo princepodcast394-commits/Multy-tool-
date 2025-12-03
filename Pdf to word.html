@@ -1,266 +1,843 @@
-/*
-TaskHero — PDF to Word Tool
-Single-file React component (default export) built with Tailwind CSS.
-
-How to use:
-1. Create a React app (e.g. using Vite or Create React App).
-2. Install deps:
-   npm install pdfjs-dist docx file-saver
-
-   - pdfjs-dist: to read PDF and extract text
-   - docx: to generate .docx files
-   - file-saver: to save the generated file
-
-3. Ensure Tailwind CSS is configured in your project.
-4. Drop this component in your project (e.g., src/components/PdfToWord.jsx) and import it in a page.
-
-Notes / limitations:
-- This tool extracts **text content** from PDFs (works well for text-based PDFs). PDFs that are scanned images will need OCR — not included here.
-- The converter attempts to preserve page breaks by inserting a page break between pages.
-- Styling of the resulting .docx is basic (plain paragraphs). You can extend docx usage for richer formatting.
-
-*/
-
-import React, { useState, useRef } from 'react'
-import { saveAs } from 'file-saver'
-import * as pdfjsLib from 'pdfjs-dist'
-import { Document, Packer, Paragraph, TextRun, PageBreak } from 'docx'
-
-// For PDF.js worker to work in many bundlers, set the workerSrc:
-// Note: Depending on your bundler, you might need to import worker separately. This approach works with pdfjs-dist >=2.6
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
-
-export default function PdfToWordTool() {
-  const [fileName, setFileName] = useState('')
-  const [processing, setProcessing] = useState(false)
-  const [progress, setProgress] = useState({ page: 0, total: 0 })
-  const [message, setMessage] = useState('')
-  const fileRef = useRef(null)
-
-  async function handleFilePick(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFileName(file.name)
-    setMessage('')
-    await convertPdfToDocx(file)
-  }
-
-  async function convertPdfToDocx(file) {
-    setProcessing(true)
-    setProgress({ page: 0, total: 0 })
-
-    try {
-      // read file as ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer()
-
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
-      const pdf = await loadingTask.promise
-
-      const total = pdf.numPages
-      setProgress({ page: 0, total })
-
-      const doc = new Document({ sections: [] })
-      const paragraphs = []
-
-      for (let p = 1; p <= total; p++) {
-        setProgress({ page: p, total })
-        const page = await pdf.getPage(p)
-        const textContent = await page.getTextContent()
-
-        // Combine text items in order
-        const pageText = textContent.items
-          .map((item) => (item.str ? item.str : ''))
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-
-        if (pageText.length > 0) {
-          // break into lines by simple heuristic (you can improve this)
-          const lines = pageText.split(/(?<=\.|\?|!)\s+/)
-          lines.forEach((line) => {
-            if (line.trim().length === 0) return
-            paragraphs.push(new Paragraph({ children: [new TextRun({ text: line.trim(), font: 'Arial', size: 22 })] }))
-          })
-        } else {
-          // If no extractable text, insert a placeholder line
-          paragraphs.push(new Paragraph({ children: [new TextRun({ text: '[Non-text content or image - not extracted]', italics: true })] }))
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Hero - PDF to Word Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        // Insert a page break after every page except last
-        if (p < total) paragraphs.push(new Paragraph({ children: [new PageBreak()] }))
-      }
-
-      // Add a single section containing all paragraphs
-      doc.addSection({ properties: {}, children: paragraphs })
-
-      setMessage('Generating Word document...')
-      const blob = await Packer.toBlob(doc)
-
-      const outName = file.name.replace(/\.pdf$/i, '') || 'converted'
-      saveAs(blob, `${outName}.docx`)
-      setMessage('Converted successfully! Your download should start.')
-    } catch (err) {
-      console.error(err)
-      setMessage('Conversion failed. See console for details. Scanned PDFs require OCR.')
-    } finally {
-      setProcessing(false)
-      setProgress({ page: 0, total: 0 })
-    }
-  }
-
-  function handleDrop(e) {
-    e.preventDefault()
-    e.stopPropagation()
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      setFileName(file.name)
-      convertPdfToDocx(file)
-    }
-  }
-
-  function preventDefault(e) {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-
-  return (
-    <div className="min-h-screen bg-[#071225] text-white font-sans">
-      {/* Header (matches the image theme) */}
-      <header className="bg-gradient-to-b from-[#082033] to-[#052034] shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-[#7bd3ff]">Task<span className="text-white">Hero</span></div>
-          </div>
-          <nav className="hidden md:flex gap-6 text-sm opacity-90">
-            <a className="hover:underline cursor-pointer">Home</a>
-            <a className="hover:underline cursor-pointer">Tools</a>
-            <a className="hover:underline cursor-pointer">Categories</a>
-            <a className="hover:underline cursor-pointer">Contact</a>
-          </nav>
+        
+        body {
+            background-color: #f8fafc;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Header Styling */
+        header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.2rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .logo i {
+            color: #fbbf24;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+        }
+        
+        nav a:hover {
+            color: #fbbf24;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4f46e5;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Tool Card */
+        .tool-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        .tool-icon {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        
+        .tool-title {
+            font-size: 2rem;
+            color: #1f2937;
+        }
+        
+        .tool-description {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+        
+        /* Upload Area */
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed #c7d2fe;
+            border-radius: 16px;
+            padding: 3.5rem 2rem;
+            margin-bottom: 2.5rem;
+            background-color: #f8fafc;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-section:hover {
+            border-color: #4f46e5;
+            background-color: #f0f9ff;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #4f46e5;
+            margin-bottom: 1.5rem;
+        }
+        
+        .upload-text {
+            font-size: 1.5rem;
+            color: #4f46e5;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .upload-subtext {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .browse-button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 0.9rem 2.2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .browse-button:hover {
+            background-color: #4338ca;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* Gallery Section */
+        .gallery-section {
+            margin-top: 3rem;
+        }
+        
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .gallery-title {
+            font-size: 1.5rem;
+            color: #1f2937;
+        }
+        
+        .clear-button {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .clear-button:hover {
+            background-color: #e5e7eb;
+            color: #4f46e5;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .gallery-item {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .file-icon {
+            font-size: 2.5rem;
+            color: #4f46e5;
+            margin-bottom: 0.8rem;
+        }
+        
+        .file-name {
+            font-size: 0.95rem;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+        
+        .file-size {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        /* Conversion Options */
+        .options-section {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2.5rem;
+        }
+        
+        .options-title {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .option-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #4f46e5;
+        }
+        
+        .option-label {
+            font-size: 1.05rem;
+            color: #4b5563;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .convert-button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 1.1rem 3rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .convert-button:hover {
+            background-color: #0da271;
+        }
+        
+        .cancel-button {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            padding: 1.1rem 3rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .cancel-button:hover {
+            background-color: #e5e7eb;
+            color: #4f46e5;
+        }
+        
+        /* Features Section */
+        .features-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.8rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .feature-icon {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 1.2rem;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 0.8rem;
+        }
+        
+        .feature-description {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #1f2937;
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .footer-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .footer-description {
+            color: #d1d5db;
+            line-height: 1.7;
+        }
+        
+        .footer-heading {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: #d1d5db;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: #fbbf24;
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #374151;
+            color: #9ca3af;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            nav ul {
+                gap: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .tool-card {
+                padding: 1.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .convert-button, .cancel-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-tools"></i>
+                <span>Task Hero</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#"><i class="fas fa-tools"></i> Tools</a></li>
+                    <li><a href="#"><i class="fas fa-star"></i> Features</a></li>
+                    <li><a href="#"><i class="fas fa-info-circle"></i> About</a></li>
+                </ul>
+            </nav>
         </div>
-      </header>
+    </header>
 
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
-        <div className="bg-[linear-gradient(180deg,#052233_0%,#061728_100%)] rounded-2xl p-8 shadow-inner flex flex-col md:flex-row items-center gap-6">
-          <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-extrabold">Task Hero – All Tools In One Place</h1>
-            <div className="mt-3 flex items-center gap-4 text-sm opacity-90">
-              <span>⚡ Fast</span>
-              <span>💲 Free</span>
-              <span>🔒 Secure</span>
-              <span>👤 100% No Login Required</span>
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="page-title">PDF to Word Converter</h1>
+        <p class="subtitle">Convert your PDF files to editable Word documents with high accuracy. Fast, free, and secure - no login required!</p>
+        
+        <!-- Tool Card -->
+        <div class="tool-card">
+            <div class="tool-header">
+                <div class="tool-icon">
+                    <i class="fas fa-file-word"></i>
+                </div>
+                <h2 class="tool-title">Convert PDF to Word</h2>
             </div>
-
-            <div className="mt-6">
-              <div className="relative max-w-xl">
-                <input placeholder="Search for any tool (e.g., PDF converter, image compressor)..." className="w-full py-3 px-4 rounded-full bg-[#0b2a3a] placeholder:text-[#7aa7bf] outline-none" />
-                <button className="absolute right-2 top-2 bg-[#143b52] px-4 py-1 rounded-full">Search</button>
-              </div>
+            
+            <p class="tool-description">
+                Upload your PDF file and convert it to a fully editable Microsoft Word document. Our tool preserves formatting, images, and layout for the most accurate conversion.
+            </p>
+            
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3 class="upload-text">Drag & Drop Your PDF File</h3>
+                <p class="upload-subtext">or click to browse files from your device</p>
+                <button class="browse-button" id="browseButton">Browse Files</button>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf" multiple>
             </div>
-          </div>
-
-          <div className="w-full md:w-1/3">
-            <div className="bg-[#062233] p-4 rounded-xl">
-              <div className="text-sm opacity-90">Selected Tool</div>
-              <div className="mt-2 font-semibold text-lg">PDF to Word</div>
-              <div className="mt-4 text-xs opacity-80">Convert PDF files to editable Word documents quickly — no signup required.</div>
+            
+            <!-- Gallery Section -->
+            <div class="gallery-section" id="gallerySection">
+                <div class="gallery-header">
+                    <h3 class="gallery-title">Selected Files</h3>
+                    <button class="clear-button" id="clearButton">Clear All</button>
+                </div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- Gallery items will be added here dynamically -->
+                    <div class="gallery-empty">
+                        <p>No files selected yet. Upload PDF files to see them here.</p>
+                    </div>
+                </div>
             </div>
-          </div>
+            
+            <!-- Conversion Options -->
+            <div class="options-section">
+                <h3 class="options-title">Conversion Options</h3>
+                <div class="options-grid">
+                    <div class="option">
+                        <input type="checkbox" id="preserveFormatting" class="option-checkbox" checked>
+                        <label for="preserveFormatting" class="option-label">Preserve formatting</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="includeImages" class="option-checkbox" checked>
+                        <label for="includeImages" class="option-label">Include images</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="recognizeText" class="option-checkbox" checked>
+                        <label for="recognizeText" class="option-label">Text recognition (OCR)</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="optimizeLayout" class="option-checkbox">
+                        <label for="optimizeLayout" class="option-label">Optimize layout for Word</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="convert-button" id="convertButton">
+                    <i class="fas fa-sync-alt"></i> Convert to Word
+                </button>
+                <button class="cancel-button" id="cancelButton">Cancel</button>
+            </div>
         </div>
-      </section>
-
-      {/* Tool area */}
-      <main className="max-w-6xl mx-auto px-4 pb-20">
-        <h2 className="text-2xl font-bold mb-6">All-In-One Tool Collection</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column: Tool card + dropzone */}
-          <div className="md:col-span-2">
-            <div className="rounded-xl bg-[#062234] p-6 shadow-lg">
-              <div className="flex items-start gap-4">
-                <div className="flex-none w-14 h-14 rounded-lg bg-[#0c374a] flex items-center justify-center text-xl">📄</div>
-                <div>
-                  <h3 className="text-xl font-semibold">PDF to Word</h3>
-                  <p className="text-sm opacity-80 mt-1">Convert PDF files to editable Word documents. Drag & drop a PDF or click to select. Works best for text-based PDFs.</p>
+        
+        <!-- Features Section -->
+        <div class="features-section">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
                 </div>
-              </div>
-
-              {/* Dropzone */}
-              <div
-                onDrop={handleDrop}
-                onDragOver={preventDefault}
-                onDragEnter={preventDefault}
-                onDragLeave={preventDefault}
-                className="mt-6 border-2 border-dashed border-[#0e3b51] rounded-xl p-6 text-center bg-[#041426] hover:border-[#1f6f95] transition-colors cursor-pointer"
-                onClick={() => fileRef.current && fileRef.current.click()}
-              >
-                <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={handleFilePick} />
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="text-2xl">📥</div>
-                  <div className="text-sm opacity-80">Drop your PDF here or click to upload</div>
-                  <div className="text-xs opacity-60">No account, no watermark — just a simple conversion.</div>
-                </div>
-              </div>
-
-              {/* Status & Progress */}
-              <div className="mt-4 flex items-center justify-between">
-                <div>
-                  <div className="text-sm">{fileName || 'No file selected'}</div>
-                  <div className="text-xs opacity-70 mt-1">{processing ? `Processing page ${progress.page} of ${progress.total}` : message}</div>
-                </div>
-                <div>
-                  <button
-                    onClick={() => fileRef.current && fileRef.current.click()}
-                    className="px-4 py-2 rounded-lg bg-[#144e6c] hover:bg-[#1b6b89]"
-                  >
-                    Upload PDF
-                  </button>
-                </div>
-              </div>
-
-              {processing && (
-                <div className="mt-4 bg-[#031823] rounded-full h-3 w-full overflow-hidden">
-                  <div className="h-3 bg-[#1e90ff] transition-[width]" style={{ width: `${(progress.page / Math.max(progress.total, 1)) * 100}%` }} />
-                </div>
-              )}
-
-              <div className="mt-6 text-xs opacity-70">
-                Tip: For scanned PDFs, use an OCR tool first and then convert the OCRed PDF for best results.
-              </div>
+                <h3 class="feature-title">Fast Conversion</h3>
+                <p class="feature-description">Convert PDF to Word in seconds with our high-speed processing technology.</p>
             </div>
-          </div>
-
-          {/* Right column: quick features / other small cards (visual parity with image) */}
-          <aside className="space-y-4">
-            <div className="rounded-xl bg-[#062234] p-4">
-              <div className="text-sm opacity-80">Quick Tools</div>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Merger</div>
-                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Compressor</div>
-                <div className="p-2 bg-[#042033] rounded-md text-xs">PDF Splitter</div>
-                <div className="p-2 bg-[#042033] rounded-md text-xs">Rotate PDF</div>
-              </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3 class="feature-title">Secure & Private</h3>
+                <p class="feature-description">Your files are protected with end-to-end encryption and automatically deleted after conversion.</p>
             </div>
-
-            <div className="rounded-xl bg-[#062234] p-4">
-              <div className="text-sm opacity-80">Why choose TaskHero?</div>
-              <ul className="mt-3 text-xs opacity-80 list-disc list-inside">
-                <li>No signup</li>
-                <li>Fast & secure</li>
-                <li>Mobile friendly</li>
-              </ul>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h3 class="feature-title">100% Free</h3>
+                <p class="feature-description">No hidden fees, no watermarks, no registration required. Completely free to use.</p>
             </div>
-          </aside>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <h3 class="feature-title">Works Anywhere</h3>
+                <p class="feature-description">Use on any device with a modern browser. No software installation needed.</p>
+            </div>
         </div>
-      </main>
-
-      <footer className="bg-[#021722] py-6 mt-6">
-        <div className="max-w-6xl mx-auto px-4 text-sm text-white opacity-80 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>© {new Date().getFullYear()} TaskHero — All tools in one place. No account required.</div>
-          <div className="opacity-90">Made with ❤️</div>
-        </div>
-      </footer>
     </div>
-  )
-}
+    
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-tools"></i>
+                    <span>Task Hero</span>
+                </div>
+                <p class="footer-description">
+                    Task Hero provides a comprehensive suite of powerful tools to simplify your daily tasks. From PDF and image editing to text utilities and calculators.
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-heading">Popular Tools</h3>
+                <ul class="footer-links">
+                    <li><a href="#">PDF to Word</a></li>
+                    <li><a href="#">Image Compressor</a></li>
+                    <li><a href="#">Video Converter</a></li>
+                    <li><a href="#">Word Counter</a></li>
+                    <li><a href="#">QR Code Generator</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3 class="footer-heading">Company</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Tools</a></li>
+                    <li><a href="#">Features</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 Task Hero. All rights reserved. Fast, Free, Secure.</p>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const browseButton = document.getElementById('browseButton');
+        const fileInput = document.getElementById('fileInput');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const clearButton = document.getElementById('clearButton');
+        const convertButton = document.getElementById('convertButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const gallerySection = document.getElementById('gallerySection');
+        
+        // Store selected files
+        let selectedFiles = [];
+        
+        // Event Listeners
+        browseButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#4f46e5';
+            uploadArea.style.backgroundColor = '#f0f9ff';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#c7d2fe';
+            uploadArea.style.backgroundColor = '#f8fafc';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#c7d2fe';
+            uploadArea.style.backgroundColor = '#f8fafc';
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => 
+                file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+            );
+            
+            if (files.length > 0) {
+                handleFiles(files);
+            } else {
+                alert('Please drop PDF files only.');
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            const files = Array.from(fileInput.files).filter(file => 
+                file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+            );
+            
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+        
+        clearButton.addEventListener('click', () => {
+            selectedFiles = [];
+            updateGallery();
+        });
+        
+        convertButton.addEventListener('click', () => {
+            if (selectedFiles.length === 0) {
+                alert('Please select at least one PDF file to convert.');
+                return;
+            }
+            
+            // Simulate conversion process
+            convertButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+            convertButton.disabled = true;
+            
+            setTimeout(() => {
+                alert(`Successfully converted ${selectedFiles.length} PDF file(s) to Word format. In a real implementation, the converted files would be downloaded.`);
+                convertButton.innerHTML = '<i class="fas fa-sync-alt"></i> Convert to Word';
+                convertButton.disabled = false;
+                
+                // Reset after conversion
+                selectedFiles = [];
+                updateGallery();
+                fileInput.value = '';
+            }, 2000);
+        });
+        
+        cancelButton.addEventListener('click', () => {
+            selectedFiles = [];
+            updateGallery();
+            fileInput.value = '';
+        });
+        
+        // Handle selected files
+        function handleFiles(files) {
+            // Add new files to selectedFiles array
+            selectedFiles = [...selectedFiles, ...files];
+            updateGallery();
+        }
+        
+        // Update gallery display
+        function updateGallery() {
+            galleryGrid.innerHTML = '';
+            
+            if (selectedFiles.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'gallery-empty';
+                emptyMessage.innerHTML = '<p>No files selected yet. Upload PDF files to see them here.</p>';
+                galleryGrid.appendChild(emptyMessage);
+                gallerySection.style.display = 'block';
+                return;
+            }
+            
+            // Show gallery section
+            gallerySection.style.display = 'block';
+            
+            // Create gallery items for each file
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'gallery-item';
+                
+                // Format file size
+                const fileSize = formatFileSize(file.size);
+                
+                // Truncate file name if too long
+                let fileName = file.name;
+                if (fileName.length > 20) {
+                    fileName = fileName.substring(0, 17) + '...';
+                }
+                
+                fileItem.innerHTML = `
+                    <div class="file-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="file-name">${fileName}</div>
+                    <div class="file-size">${fileSize}</div>
+                `;
+                
+                // Add remove button
+                const removeButton = document.createElement('button');
+                removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                removeButton.style.cssText = `
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 24px;
+                    height: 24px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                `;
+                
+                removeButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedFiles.splice(index, 1);
+                    updateGallery();
+                });
+                
+                fileItem.style.position = 'relative';
+                fileItem.appendChild(removeButton);
+                galleryGrid.appendChild(fileItem);
+            });
+        }
+        
+        // Format file size to readable format
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Initialize gallery
+        updateGallery();
+    </script>
+</body>
+</html>
